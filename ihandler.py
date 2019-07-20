@@ -34,8 +34,9 @@ class IHandler():
         if index == -1 and self.debug:
             print("IHandler Error - Requested handle keydown but key hasn't been mapped")
             return
-        self.queue.append(index)
-        self.states[index] = True
+        if not self.states[index]:
+            self.queue.append(index)
+            self.states[index] = True
 
     def keyUp(self, key):
         if self.currentMapIndex != -1:
@@ -54,8 +55,9 @@ class IHandler():
         if index == -1 and self.debug:
             print("IHandler Error - Requested handle keyup but key hasn't been mapped")
             return
-        self.queue.append(-1*(index + 1)) #all release indexes are negative, but we have to shift them all up one because there is no negative zero
-        self.states[index] = False
+        if self.states[index]:
+            self.queue.append(-1*(index + 1)) #all release indexes are negative, but we have to shift them all up one because there is no negative zero
+            self.states[index] = False
 
     def keyQueue(self):
         if len(self.queue) == 0:
@@ -108,10 +110,10 @@ class IHandler():
         if custom:
             fileName = "keyconfig.txt"
         mapFile = open(fileName, "r")
-        for line in mapFile:
+        for line in mapFile.read().splitlines():
             index = line.index("=")
             self.names.append(line[:index])
-            self.map.append(int(line[(index+1):]))
+            self.map.append(line[(index+1):])
         mapFile.close()
         self.states = [False] * len(self.names)
 

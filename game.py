@@ -72,6 +72,14 @@ class Game():
         self.bigfont = pygame.font.SysFont("Serif", 22)
         self.fpsText = self.smallfont.render("FPS", False, self.GREEN)
 
+        pygame.joystick.init()
+        self.joystickLabels = []
+        self.joystickLabelPool = "ABCDEFGHIJ" #we shouldn't ever need more than this
+        self.joystickCount = pygame.joystick.get_count()
+        self.joystickText = self.smallfont.render("Joysticks: " + str(self.joystickCount), False, self.GREEN)
+        for i in range(0, self.joystickCount):
+            pygame.joystick.Joystick(i).init()
+            self.joystickLabels.append(self.joystickLabelPool[i])
         self.ihandler = ihandler.IHandler(["SNEK LEFT", "SNEK UP", "SNEK RIGHT", "SNEK DOWN", "RESET GAME"])
 
         self.gameInit()
@@ -94,36 +102,42 @@ class Game():
                 self.running = False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_F1:
-                    print("default controls")
+                    self.ihandler.loadMapping(False)
                 elif event.key == pygame.K_F2:
                     self.ihandler.startMapping()
                 elif event.key == pygame.K_F3:
                     self.showFps = not self.showFps
                 else:
-                    self.ihandler.keyDown(event.key)
+                    self.ihandler.keyDown("K" + str(event.key))
             elif event.type == pygame.KEYUP:
                 if event.key != pygame.K_ESCAPE and event.key != pygame.K_F1 and event.key != pygame.K_F2 and event.key != pygame.K_F3:
-                    self.ihandler.keyUp(event.key)
-                #elif event.key == pygame.K_UP:
-                #    self.snek.direction = self.snek.UP
-                #elif event.key == pygame.K_RIGHT:
-                #    self.snek.direction = self.snek.RIGHT
-                #elif event.key == pygame.K_DOWN:
-                #    self.snek.direction = self.snek.DOWN
-                #elif event.key == pygame.K_LEFT:
-                #    self.snek.direction = self.snek.LEFT
-                #elif event.key == pygame.K_SPACE:
-                #    if not self.ongoing:
-                #        self.snek = Snek(10, 5)
-                #        self.spawnApple()
-                #        self.ongoing = True
+                    self.ihandler.keyUp("K" + str(event.key))
+            elif event.type == pygame.JOYBUTTONDOWN:
+                self.ihandler.keyDown(self.joystickLabels[event.joy] + str(event.button))
+            elif event.type == pygame.JOYBUTTONUP:
+                self.ihandler.keyUp(self.joystickLabels[event.joy] + str(event.button))
+                '''
+            elif event.type == pygame.JOYAXISMOTION:
+                axisName = self.joystickLabels[event.joy] + "A" + str(event.axis)
+                axisNamePos = axisName + "+"
+                axisNameNeg = axisName + "-"
+                pos = pygame.joystick.Joystick(event.joy).get_axis(event.axis)
+                if pos == 0:
+                    self.ihandler.keyUp(axisNamePos)
+                    self.ihandler.keyUp(axisNameNeg)
+                elif pos > 0:
+                    self.ihandler.keyDown(axisNamePos)
+                    self.ihandler.keyUp(axisNameNeg)
+                elif pos < 0:
+                    self.ihandler.keyDown(axisNameNeg)
+                    self.ihandler.keyUp(axisNamePos)
+                    '''
 
     def update(self):
         #handle inputs from ihandler
         event = ''
         while event != "EMPTY":
             event = self.ihandler.keyQueue()
-
             if event == "SNEK UP":
                 self.snek.direction = self.snek.UP
             elif event == "SNEK RIGHT":
@@ -158,6 +172,7 @@ class Game():
 
         if self.showFps:
             self.screen.blit(self.fpsText, (0, 0))
+            self.screen.blit(self.joystickText, (0, 15))
 
         pygame.display.flip()
 
@@ -190,11 +205,15 @@ class Game():
                 if event.key == pygame.K_ESCAPE or event.key == pygame.K_F1 or event.key == pygame.K_F2 or event.key == pygame.K_F3:
                     print("You can't map those keys!")
                     continue
-                self.ihandler.keyDown(event.key)
+                self.ihandler.keyDown("K" + str(event.key))
             elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_ESCAPE or event.key == pygame.K_F1 or event.key == pygame.K_F2 or event.key == pygame.K_F3:
                     continue
-                self.ihandler.keyUp(event.key)
+                self.ihandler.keyUp("K" + str(event.key))
+            elif event.type == pygame.JOYBUTTONDOWN:
+                self.ihandler.keyDown(self.joystickLabels[event.joy] + str(event.button))
+            elif event.type == pygame.JOYBUTTONUP:
+                self.ihandler.keyUp(self.joystickLabels[event.joy] + str(event.button))
 
     def run(self):
         SECOND = 1000
@@ -218,6 +237,8 @@ class Game():
                 beforeTime += SECOND
 
     def quit(self):
+        pygame.joystick.quit()
+        pygame.font.quit()
         pygame.quit()
 
 os.environ['SDL_VIDEO_CENTERED'] = '1' #centers the pygame window
