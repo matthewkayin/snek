@@ -1,6 +1,7 @@
 import pygame
 import os
 import random
+import ihandler
 
 class Snek():
     def __init__(self, x, y):
@@ -66,9 +67,18 @@ class Game():
         self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
         self.clock = pygame.time.Clock()
 
+        pygame.font.init()
+        self.smallfont = pygame.font.SysFont("Serif", 14)
+        self.bigfont = pygame.font.SysFont("Serif", 22)
+        self.fpsText = self.smallfont.render("FPS", False, self.GREEN)
+
+        self.ihandler = ihandler.IHandler(["SNEK LEFT", "SNEK UP", "SNEK RIGHT", "SNEK DOWN", "RESET GAME"])
+
         self.gameInit()
 
         self.running = True
+        self.showFps = False
+
         self.run()
         self.quit()
 
@@ -83,21 +93,51 @@ class Game():
             if event.type == pygame.QUIT or (event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
                 self.running = False
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP:
-                    self.snek.direction = self.snek.UP
-                elif event.key == pygame.K_RIGHT:
-                    self.snek.direction = self.snek.RIGHT
-                elif event.key == pygame.K_DOWN:
-                    self.snek.direction = self.snek.DOWN
-                elif event.key == pygame.K_LEFT:
-                    self.snek.direction = self.snek.LEFT
-                elif event.key == pygame.K_SPACE:
-                    if not self.ongoing:
-                        self.snek = Snek(10, 5)
-                        self.spawnApple()
-                        self.ongoing = True
+                if event.key == pygame.K_F1:
+                    print("default controls")
+                elif event.key == pygame.K_F2:
+                    self.ihandler.startMapping()
+                elif event.key == pygame.K_F3:
+                    self.showFps = not self.showFps
+                else:
+                    self.ihandler.keyDown(event.key)
+            elif event.type == pygame.KEYUP:
+                if event.key != pygame.K_ESCAPE and event.key != pygame.K_F1 and event.key != pygame.K_F2 and event.key != pygame.K_F3:
+                    self.ihandler.keyUp(event.key)
+                #elif event.key == pygame.K_UP:
+                #    self.snek.direction = self.snek.UP
+                #elif event.key == pygame.K_RIGHT:
+                #    self.snek.direction = self.snek.RIGHT
+                #elif event.key == pygame.K_DOWN:
+                #    self.snek.direction = self.snek.DOWN
+                #elif event.key == pygame.K_LEFT:
+                #    self.snek.direction = self.snek.LEFT
+                #elif event.key == pygame.K_SPACE:
+                #    if not self.ongoing:
+                #        self.snek = Snek(10, 5)
+                #        self.spawnApple()
+                #        self.ongoing = True
 
     def update(self):
+        #handle inputs from ihandler
+        event = ''
+        while event != "EMPTY":
+            event = self.ihandler.keyQueue()
+
+            if event == "SNEK UP":
+                self.snek.direction = self.snek.UP
+            elif event == "SNEK RIGHT":
+                self.snek.direction = self.snek.RIGHT
+            elif event == "SNEK DOWN":
+                self.snek.direction = self.snek.DOWN
+            elif event == "SNEK LEFT":
+                self.snek.direction = self.snek.LEFT
+            elif event == "RESET GAME":
+                if not self.ongoing:
+                    self.snek = Snek(10, 5)
+                    self.spawnApple()
+                    self.ongoing = True
+
         if self.ongoing:
             self.snek.moveCounter -= 1
             if self.snek.moveCounter == 0:
@@ -116,6 +156,9 @@ class Game():
         for piece in self.snek.pos:
             pygame.draw.rect(self.screen, self.GREEN, (piece[0]*32, piece[1]*32, 32, 32), False)
 
+        if self.showFps:
+            self.screen.blit(self.fpsText, (0, 0))
+
         pygame.display.flip()
 
     def spawnApple(self):
@@ -132,20 +175,45 @@ class Game():
                     break
         self.apple = [appleX, appleY]
 
+    def mapInput(self):
+        self.screen.fill(self.BLACK)
+
+        header = self.bigfont.render("Mapping Key Inputs!", False, self.WHITE)
+        instructions = self.bigfont.render("Press the key you want for... " + self.ihandler.keyToMap(), False, self.WHITE)
+        self.screen.blit(header, (self.SCREEN_WIDTH / 4, self.SCREEN_HEIGHT / 2 - 50))
+        self.screen.blit(instructions, (self.SCREEN_WIDTH / 4, self.SCREEN_HEIGHT / 2 - 20))
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE or event.key == pygame.K_F1 or event.key == pygame.K_F2 or event.key == pygame.K_F3:
+                    print("You can't map those keys!")
+                    continue
+                self.ihandler.keyDown(event.key)
+            elif event.type == pygame.KEYUP:
+                if event.key == pygame.K_ESCAPE or event.key == pygame.K_F1 or event.key == pygame.K_F2 or event.key == pygame.K_F3:
+                    continue
+                self.ihandler.keyUp(event.key)
+
     def run(self):
         SECOND = 1000
         beforeTime = pygame.time.get_ticks()
         frames = 0
         while self.running:
             self.clock.tick(self.TARGET_FPS)
-            self.input()
-            self.update()
-            self.render()
-            frames += 1
+            if self.ihandler.isMapping():
+                self.mapInput()
+            else:
+                self.input()
+                self.update()
+                self.render()
+                frames += 1
 
             afterTime = pygame.time.get_ticks()
             if afterTime - beforeTime >= SECOND:
-                print("FPS = " + str(frames))
+                #print("FPS = " + str(frames))
+                self.fpsText = self.smallfont.render('FPS: ' + str(frames), False, self.GREEN)
                 frames = 0
                 beforeTime += SECOND
 
