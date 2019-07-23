@@ -2,7 +2,6 @@
 #Handles key input in a way that's universal across controllers/keyboards, allows keybinds to be saved in a config file
 #Matt Madden
 
-import pygame
 import os.path
 
 class IHandler():
@@ -56,6 +55,7 @@ class IHandler():
             print("IHandler Error - Requested handle keyup but key hasn't been mapped")
             return
         if self.states[index]:
+            print(self.map[index])
             self.queue.append(-1*(index + 1)) #all release indexes are negative, but we have to shift them all up one because there is no negative zero
             self.states[index] = False
 

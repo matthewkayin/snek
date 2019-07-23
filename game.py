@@ -116,9 +116,8 @@ class Game():
                 self.ihandler.keyDown(self.joystickLabels[event.joy] + str(event.button))
             elif event.type == pygame.JOYBUTTONUP:
                 self.ihandler.keyUp(self.joystickLabels[event.joy] + str(event.button))
-                '''
             elif event.type == pygame.JOYAXISMOTION:
-                axisName = self.joystickLabels[event.joy] + "A" + str(event.axis)
+                axisName = self.joystickLabels[event.joy] + "X" + str(event.axis)
                 axisNamePos = axisName + "+"
                 axisNameNeg = axisName + "-"
                 pos = pygame.joystick.Joystick(event.joy).get_axis(event.axis)
@@ -131,7 +130,31 @@ class Game():
                 elif pos < 0:
                     self.ihandler.keyDown(axisNameNeg)
                     self.ihandler.keyUp(axisNamePos)
-                    '''
+            elif event.type == pygame.JOYHATMOTION:
+                axisName = self.joystickLabels[event.joy] + "T" + str(event.hat)
+                axisNameHPos = axisName + "h+"
+                axisNameHNeg = axisName + "h-"
+                axisNameVPos = axisName + "v+"
+                axisNameVNeg = axisName + "v-"
+                pos = pygame.joystick.Joystick(event.joy).get_hat(event.hat)
+                if pos[0] == 0:
+                    self.ihandler.keyUp(axisNameHPos)
+                    self.ihandler.keyUp(axisNameHNeg)
+                elif pos[0] == 1:
+                    self.ihandler.keyDown(axisNameHPos)
+                    self.ihandler.keyUp(axisNameHNeg)
+                elif pos[0] == -1:
+                    self.ihandler.keyUp(axisNameHPos)
+                    self.ihandler.keyDown(axisNameHNeg)
+                if pos[1] == 0:
+                    self.ihandler.keyUp(axisNameVPos)
+                    self.ihandler.keyUp(axisNameVNeg)
+                elif pos[1] == 1:
+                    self.ihandler.keyDown(axisNameVPos)
+                    self.ihandler.keyUp(axisNameVNeg)
+                elif pos[1] == -1:
+                    self.ihandler.keyUp(axisNameVPos)
+                    self.ihandler.keyDown(axisNameVNeg)
 
     def update(self):
         #handle inputs from ihandler
@@ -214,6 +237,36 @@ class Game():
                 self.ihandler.keyDown(self.joystickLabels[event.joy] + str(event.button))
             elif event.type == pygame.JOYBUTTONUP:
                 self.ihandler.keyUp(self.joystickLabels[event.joy] + str(event.button))
+            elif event.type == pygame.JOYAXISMOTION:
+                axisName = self.joystickLabels[event.joy] + "X" + str(event.axis)
+                axisNamePos = axisName + "+"
+                axisNameNeg = axisName + "-"
+                pos = pygame.joystick.Joystick(event.joy).get_axis(event.axis)
+                if pos == 0:
+                    self.ihandler.keyUp(axisNameNeg)
+                elif pos > 0:
+                    self.ihandler.keyDown(axisNamePos)
+                elif pos < 0:
+                    self.ihandler.keyDown(axisNameNeg)
+            elif event.type == pygame.JOYHATMOTION:
+                axisName = self.joystickLabels[event.joy] + "T" + str(event.hat)
+                axisNameHPos = axisName + "h+"
+                axisNameHNeg = axisName + "h-"
+                axisNameVPos = axisName + "v+"
+                axisNameVNeg = axisName + "v-"
+                pos = pygame.joystick.Joystick(event.joy).get_hat(event.hat)
+                if pos[0] == 0:
+                    self.ihandler.keyUp(axisNameHPos)
+                elif pos[0] == 1:
+                    self.ihandler.keyDown(axisNameHPos)
+                elif pos[0] == -1:
+                    self.ihandler.keyDown(axisNameHNeg)
+                if pos[1] == 0:
+                    self.ihandler.keyUp(axisNameVPos)
+                elif pos[1] == 1:
+                    self.ihandler.keyDown(axisNameVPos)
+                elif pos[1] == -1:
+                    self.ihandler.keyDown(axisNameVNeg)
 
     def run(self):
         SECOND = 1000
@@ -240,6 +293,7 @@ class Game():
         pygame.joystick.quit()
         pygame.font.quit()
         pygame.quit()
+
 
 os.environ['SDL_VIDEO_CENTERED'] = '1' #centers the pygame window
 game = Game()
