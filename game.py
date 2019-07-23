@@ -3,6 +3,7 @@ import os
 import random
 import ihandler
 
+
 class Snek():
     def __init__(self, x, y):
         self.pos = []
@@ -14,35 +15,35 @@ class Snek():
         self.LEFT = 3
         self.direction = self.RIGHT
         self.MOVE_FREQ = 5
-        self.moveCounter = self.MOVE_FREQ
+        self.move_counter = self.MOVE_FREQ
 
-    def move(self, eatApple):
-        if eatApple:
-            newX = self.pos[len(self.pos) - 1][0]
-            newY = self.pos[len(self.pos) - 2][1]
-            self.pos.append([newX, newY])
+    def move(self, eat_apple):
+        if eat_apple:
+            new_x = self.pos[len(self.pos) - 1][0]
+            new_y = self.pos[len(self.pos) - 2][1]
+            self.pos.append([new_x, new_y])
 
-        nextX = self.pos[0][0]
-        nextY = self.pos[0][1]
+        next_x = self.pos[0][0]
+        next_y = self.pos[0][1]
         if self.direction == self.UP:
-            nextY -= 1
+            next_y -= 1
         elif self.direction == self.RIGHT:
-            nextX += 1
+            next_x += 1
         elif self.direction == self.DOWN:
-            nextY += 1
+            next_y += 1
         elif self.direction == self.LEFT:
-            nextX -= 1
+            next_x -= 1
         for i in range(0, len(self.pos)):
-            if eatApple and i == len(self.pos) - 1:
+            if eat_apple and i == len(self.pos) - 1:
                 continue
             oldX = self.pos[i][0]
             oldY = self.pos[i][1]
-            self.pos[i][0] = nextX
-            self.pos[i][1] = nextY
-            nextX = oldX
-            nextY = oldY
+            self.pos[i][0] = next_x
+            self.pos[i][1] = next_y
+            next_x = oldX
+            next_y = oldY
 
-    def isDead(self):
+    def is_dead(self):
         x = self.pos[0][0]
         y = self.pos[0][1]
         collision = False
@@ -50,6 +51,7 @@ class Snek():
             if self.pos[0][0] == self.pos[i][0] and self.pos[0][1] == self.pos[i][1]:
                 collision = True
         return x >= (640 / 32) or x < 0 or y >= (480 / 32) or y < 0 or collision
+
 
 class Game():
     def __init__(self):
@@ -70,31 +72,31 @@ class Game():
         pygame.font.init()
         self.smallfont = pygame.font.SysFont("Serif", 14)
         self.bigfont = pygame.font.SysFont("Serif", 22)
-        self.fpsText = self.smallfont.render("FPS", False, self.GREEN)
+        self.fps_text = self.smallfont.render("FPS", False, self.GREEN)
 
         pygame.joystick.init()
-        self.joystickLabels = []
-        self.joystickLabelPool = "ABCDEFGHIJ" #we shouldn't ever need more than this
-        self.joystickCount = pygame.joystick.get_count()
-        self.joystickText = self.smallfont.render("Joysticks: " + str(self.joystickCount), False, self.GREEN)
-        for i in range(0, self.joystickCount):
+        self.joystick_labels = []
+        self.joystick_label_pool = "ABCDEFGHIJ"  # we shouldn't ever need more than this
+        self.joystick_count = pygame.joystick.get_count()
+        self.joystick_text = self.smallfont.render("Joysticks: " + str(self.joystick_count), False, self.GREEN)
+        for i in range(0, self.joystick_count):
             pygame.joystick.Joystick(i).init()
-            self.joystickLabels.append(self.joystickLabelPool[i])
-        self.ihandler = ihandler.IHandler(["SNEK LEFT", "SNEK UP", "SNEK RIGHT", "SNEK DOWN", "RESET GAME"])
+            self.joystick_labels.append(self.joystick_label_pool[i])
+        self.ihandler = ihandler.IHandler(["AXIS SNEK HORIZ", "AXIS SNEK VERT", "RESET GAME"])
 
-        self.gameInit()
+        self.game_init()
 
         self.running = True
-        self.showFps = False
+        self.show_fps = False
 
         self.run()
         self.quit()
 
-    def gameInit(self):
+    def game_init(self):
         self.snek = Snek(10, 5)
         self.ongoing = True
         self.apple = [-1, -1]
-        self.spawnApple()
+        self.spawn_apple()
 
     def input(self):
         for event in pygame.event.get():
@@ -104,63 +106,66 @@ class Game():
                 if event.key == pygame.K_F1:
                     self.ihandler.loadMapping(False)
                 elif event.key == pygame.K_F2:
-                    self.ihandler.startMapping()
+                    self.ihandler.start_mapping()
                 elif event.key == pygame.K_F3:
-                    self.showFps = not self.showFps
+                    self.show_fps = not self.showFps
                 else:
-                    self.ihandler.keyDown("K" + str(event.key))
+                    self.ihandler.key_down("K" + str(event.key))
             elif event.type == pygame.KEYUP:
                 if event.key != pygame.K_ESCAPE and event.key != pygame.K_F1 and event.key != pygame.K_F2 and event.key != pygame.K_F3:
-                    self.ihandler.keyUp("K" + str(event.key))
+                    self.ihandler.key_up("K" + str(event.key))
             elif event.type == pygame.JOYBUTTONDOWN:
-                self.ihandler.keyDown(self.joystickLabels[event.joy] + str(event.button))
+                self.ihandler.key_down(self.joystick_labels[event.joy] + str(event.button))
             elif event.type == pygame.JOYBUTTONUP:
-                self.ihandler.keyUp(self.joystickLabels[event.joy] + str(event.button))
+                self.ihandler.key_up(self.joystick_labels[event.joy] + str(event.button))
             elif event.type == pygame.JOYAXISMOTION:
-                axisName = self.joystickLabels[event.joy] + "X" + str(event.axis)
-                axisNamePos = axisName + "+"
-                axisNameNeg = axisName + "-"
+                axis = self.joystick_labels[event.joy] + "x" + str(event.axis)
                 pos = pygame.joystick.Joystick(event.joy).get_axis(event.axis)
+                if self.ihandler.is_mapped_axis(axis):
+                    self.ihandler.axis_moved(axis, pos)
+                axis_pos = axis + "+"
+                axis_neg = axis + "-"
                 if pos == 0:
-                    self.ihandler.keyUp(axisNamePos)
-                    self.ihandler.keyUp(axisNameNeg)
+                    self.ihandler.key_up(axis_pos)
+                    self.ihandler.key_up(axis_neg)
                 elif pos > 0:
-                    self.ihandler.keyDown(axisNamePos)
-                    self.ihandler.keyUp(axisNameNeg)
+                    self.ihandler.key_down(axis_pos)
+                    self.ihandler.key_up(axis_neg)
                 elif pos < 0:
-                    self.ihandler.keyDown(axisNameNeg)
-                    self.ihandler.keyUp(axisNamePos)
+                    self.ihandler.key_down(axis_neg)
+                    self.ihandler.key_up(axis_pos)
             elif event.type == pygame.JOYHATMOTION:
-                axisName = self.joystickLabels[event.joy] + "T" + str(event.hat)
-                axisNameHPos = axisName + "h+"
-                axisNameHNeg = axisName + "h-"
-                axisNameVPos = axisName + "v+"
-                axisNameVNeg = axisName + "v-"
+                axis = self.joystick_labels[event.joy] + "t" + str(event.hat)
+                axis_h_pos = axis + "h+"
+                axis_h_neg = axis + "h-"
+                axis_v_pos = axis + "v+"
+                axis_v_neg = axis + "v-"
                 pos = pygame.joystick.Joystick(event.joy).get_hat(event.hat)
                 if pos[0] == 0:
-                    self.ihandler.keyUp(axisNameHPos)
-                    self.ihandler.keyUp(axisNameHNeg)
+                    self.ihandler.key_up(axis_h_pos)
+                    self.ihandler.key_up(axis_h_neg)
                 elif pos[0] == 1:
-                    self.ihandler.keyDown(axisNameHPos)
-                    self.ihandler.keyUp(axisNameHNeg)
+                    self.ihandler.key_down(axis_h_pos)
+                    self.ihandler.key_up(axis_h_neg)
                 elif pos[0] == -1:
-                    self.ihandler.keyUp(axisNameHPos)
-                    self.ihandler.keyDown(axisNameHNeg)
+                    self.ihandler.key_up(axis_h_pos)
+                    self.ihandler.key_down(axis_h_neg)
                 if pos[1] == 0:
-                    self.ihandler.keyUp(axisNameVPos)
-                    self.ihandler.keyUp(axisNameVNeg)
+                    self.ihandler.key_up(axis_v_pos)
+                    self.ihandler.key_up(axis_v_neg)
                 elif pos[1] == 1:
-                    self.ihandler.keyDown(axisNameVPos)
-                    self.ihandler.keyUp(axisNameVNeg)
+                    self.ihandler.key_down(axis_v_pos)
+                    self.ihandler.key_up(axis_v_neg)
                 elif pos[1] == -1:
-                    self.ihandler.keyUp(axisNameVPos)
-                    self.ihandler.keyDown(axisNameVNeg)
+                    self.ihandler.key_up(axis_v_pos)
+                    self.ihandler.key_down(axis_v_neg)
 
     def update(self):
-        #handle inputs from ihandler
+        # handle inputs from ihandler
+        '''
         event = ''
         while event != "EMPTY":
-            event = self.ihandler.keyQueue()
+            event = self.ihandler.key_queue()
             if event == "SNEK UP":
                 self.snek.direction = self.snek.UP
             elif event == "SNEK RIGHT":
@@ -172,52 +177,60 @@ class Game():
             elif event == "RESET GAME":
                 if not self.ongoing:
                     self.snek = Snek(10, 5)
-                    self.spawnApple()
+                    self.spawn_apple()
                     self.ongoing = True
+                    '''
 
         if self.ongoing:
-            self.snek.moveCounter -= 1
-            if self.snek.moveCounter == 0:
-                self.snek.moveCounter = self.snek.MOVE_FREQ
-                ateApple = self.apple[0] == self.snek.pos[0][0] and self.apple[1] == self.snek.pos[0][1]
-                self.snek.move(ateApple)
-                if ateApple:
-                    self.spawnApple()
-                if self.snek.isDead():
+            self.snek.move_counter -= 1
+            if self.snek.move_counter == 0:
+                self.snek.move_counter = self.snek.MOVE_FREQ
+                ate_apple = self.apple[0] == self.snek.pos[0][0] and self.apple[1] == self.snek.pos[0][1]
+                self.snek.move(ate_apple)
+                if ate_apple:
+                    self.spawn_apple()
+                if self.snek.is_dead():
                     self.ongoing = False
 
     def render(self):
         self.screen.fill(self.BLACK)
 
-        pygame.draw.rect(self.screen, self.RED, (self.apple[0]*32, self.apple[1]*32, 32, 32), False)
+        '''
+        pygame.draw.rect(self.screen, self.RED, (self.apple[0] * 32, self.apple[1] * 32, 32, 32), False)
         for piece in self.snek.pos:
-            pygame.draw.rect(self.screen, self.GREEN, (piece[0]*32, piece[1]*32, 32, 32), False)
+            pygame.draw.rect(self.screen, self.GREEN, (piece[0] * 32, piece[1] * 32, 32, 32), False)
+        '''
 
-        if self.showFps:
-            self.screen.blit(self.fpsText, (0, 0))
-            self.screen.blit(self.joystickText, (0, 15))
+        pos = [0, 0]
+        pos[0] = (self.SCREEN_WIDTH / 2) + 20 * self.ihandler.get_state("AXIS SNEK HORIZ")
+        pos[1] = (self.SCREEN_HEIGHT / 2) + 20 * self.ihandler.get_state("AXIS SNEK VERT")
+        pygame.draw.rect(self.screen, self.RED, (pos[0], pos[1], 20, 20), False)
+
+        if self.show_fps:
+            self.screen.blit(self.fps_text, (0, 0))
+            self.screen.blit(self.joystick_text, (0, 15))
 
         pygame.display.flip()
 
-    def spawnApple(self):
-        appleOk = False
-        appleX = -1
-        appleY = -1
-        while not appleOk:
-            appleOk = True
-            appleX = random.randint(0, (self.SCREEN_WIDTH / 32) - 1)
-            appleY = random.randint(0, (self.SCREEN_HEIGHT / 32) - 1)
+    def spawn_apple(self):
+        apple_ok = False
+        apple_x = -1
+        apple_y = -1
+        while not apple_ok:
+            apple_ok = True
+            apple_x = random.randint(0, (self.SCREEN_WIDTH / 32) - 1)
+            apple_y = random.randint(0, (self.SCREEN_HEIGHT / 32) - 1)
             for piece in self.snek.pos:
-                if piece[0] == appleX and piece[1] == appleY:
-                    appleOk = False
+                if piece[0] == apple_x and piece[1] == apple_y:
+                    apple_ok = False
                     break
-        self.apple = [appleX, appleY]
+        self.apple = [apple_x, apple_y]
 
-    def mapInput(self):
+    def map_input(self):
         self.screen.fill(self.BLACK)
 
         header = self.bigfont.render("Mapping Key Inputs!", False, self.WHITE)
-        instructions = self.bigfont.render("Press the key you want for... " + self.ihandler.keyToMap(), False, self.WHITE)
+        instructions = self.bigfont.render("Press the key you want for... " + self.ihandler.to_map(), False, self.WHITE)
         self.screen.blit(header, (self.SCREEN_WIDTH / 4, self.SCREEN_HEIGHT / 2 - 50))
         self.screen.blit(instructions, (self.SCREEN_WIDTH / 4, self.SCREEN_HEIGHT / 2 - 20))
 
@@ -228,66 +241,68 @@ class Game():
                 if event.key == pygame.K_ESCAPE or event.key == pygame.K_F1 or event.key == pygame.K_F2 or event.key == pygame.K_F3:
                     print("You can't map those keys!")
                     continue
-                self.ihandler.keyDown("K" + str(event.key))
+                self.ihandler.key_down("K" + str(event.key))
             elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_ESCAPE or event.key == pygame.K_F1 or event.key == pygame.K_F2 or event.key == pygame.K_F3:
                     continue
-                self.ihandler.keyUp("K" + str(event.key))
+                self.ihandler.key_up("K" + str(event.key))
             elif event.type == pygame.JOYBUTTONDOWN:
-                self.ihandler.keyDown(self.joystickLabels[event.joy] + str(event.button))
+                self.ihandler.key_down(self.joystick_labels[event.joy] + str(event.button))
             elif event.type == pygame.JOYBUTTONUP:
-                self.ihandler.keyUp(self.joystickLabels[event.joy] + str(event.button))
+                self.ihandler.key_up(self.joystick_labels[event.joy] + str(event.button))
             elif event.type == pygame.JOYAXISMOTION:
-                axisName = self.joystickLabels[event.joy] + "X" + str(event.axis)
-                axisNamePos = axisName + "+"
-                axisNameNeg = axisName + "-"
+                axis = self.joystick_labels[event.joy] + "x" + str(event.axis)
                 pos = pygame.joystick.Joystick(event.joy).get_axis(event.axis)
+                if self.ihandler.to_map().startswith("AXIS ") and pos != 0:
+                    self.ihandler.key_down(axis)
+                axis_pos = axis + "+"
+                axis_neg = axis + "-"
                 if pos == 0:
-                    self.ihandler.keyUp(axisNameNeg)
+                    self.ihandler.key_up(axis_neg)
                 elif pos > 0:
-                    self.ihandler.keyDown(axisNamePos)
+                    self.ihandler.key_down(axis_pos)
                 elif pos < 0:
-                    self.ihandler.keyDown(axisNameNeg)
+                    self.ihandler.key_down(axis_neg)
             elif event.type == pygame.JOYHATMOTION:
-                axisName = self.joystickLabels[event.joy] + "T" + str(event.hat)
-                axisNameHPos = axisName + "h+"
-                axisNameHNeg = axisName + "h-"
-                axisNameVPos = axisName + "v+"
-                axisNameVNeg = axisName + "v-"
+                axis = self.joystick_labels[event.joy] + "t" + str(event.hat)
+                axis_h_pos = axis + "h+"
+                axis_h_neg = axis + "h-"
+                axis_v_pos = axis + "v+"
+                axis_v_neg = axis + "v-"
                 pos = pygame.joystick.Joystick(event.joy).get_hat(event.hat)
                 if pos[0] == 0:
-                    self.ihandler.keyUp(axisNameHPos)
+                    self.ihandler.key_up(axis_h_pos)
                 elif pos[0] == 1:
-                    self.ihandler.keyDown(axisNameHPos)
+                    self.ihandler.key_down(axis_h_pos)
                 elif pos[0] == -1:
-                    self.ihandler.keyDown(axisNameHNeg)
+                    self.ihandler.key_down(axis_h_neg)
                 if pos[1] == 0:
-                    self.ihandler.keyUp(axisNameVPos)
+                    self.ihandler.key_up(axis_v_pos)
                 elif pos[1] == 1:
-                    self.ihandler.keyDown(axisNameVPos)
+                    self.ihandler.key_down(axis_v_pos)
                 elif pos[1] == -1:
-                    self.ihandler.keyDown(axisNameVNeg)
+                    self.ihandler.key_down(axis_v_neg)
 
     def run(self):
         SECOND = 1000
-        beforeTime = pygame.time.get_ticks()
+        before_time = pygame.time.get_ticks()
         frames = 0
         while self.running:
             self.clock.tick(self.TARGET_FPS)
-            if self.ihandler.isMapping():
-                self.mapInput()
+            if self.ihandler.is_mapping():
+                self.map_input()
             else:
                 self.input()
                 self.update()
                 self.render()
                 frames += 1
 
-            afterTime = pygame.time.get_ticks()
-            if afterTime - beforeTime >= SECOND:
-                #print("FPS = " + str(frames))
-                self.fpsText = self.smallfont.render('FPS: ' + str(frames), False, self.GREEN)
+            after_time = pygame.time.get_ticks()
+            if after_time - before_time >= SECOND:
+                # print("FPS = " + str(frames))
+                self.fps_text = self.smallfont.render('FPS: ' + str(frames), False, self.GREEN)
                 frames = 0
-                beforeTime += SECOND
+                before_time += SECOND
 
     def quit(self):
         pygame.joystick.quit()
@@ -295,5 +310,5 @@ class Game():
         pygame.quit()
 
 
-os.environ['SDL_VIDEO_CENTERED'] = '1' #centers the pygame window
+os.environ['SDL_VIDEO_CENTERED'] = '1'  # centers the pygame window
 game = Game()
