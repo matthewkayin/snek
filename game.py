@@ -82,6 +82,7 @@ class Game():
         self.fps_text = self.smallfont.render("FPS", False, self.GREEN)
 
         pygame.joystick.init()
+        self.AXIS_THRESHOLD = 0.001
         self.joystick_labels = []
         self.joystick_label_pool = "ABCDEFGHIJ"  # we shouldn't ever need more than this
         self.joystick_count = pygame.joystick.get_count()
@@ -133,7 +134,7 @@ class Game():
                     self.ihandler.axis_moved(axis, pos)
                 axis_pos = axis + "+"
                 axis_neg = axis + "-"
-                if pos == 0:
+                if abs(pos) <= self.AXIS_THRESHOLD:
                     self.ihandler.key_up(axis_pos)
                     self.ihandler.key_up(axis_neg)
                 elif pos > 0:
@@ -245,8 +246,8 @@ class Game():
 
         header = self.bigfont.render("Mapping Key Inputs!", False, self.WHITE)
         instructions = self.bigfont.render("Press the key you want for... " + self.ihandler.to_map(), False, self.WHITE)
-        self.screen.blit(header, (self.SCREEN_WIDTH / 4, self.SCREEN_HEIGHT / 2 - 50))
-        self.screen.blit(instructions, (self.SCREEN_WIDTH / 4, self.SCREEN_HEIGHT / 2 - 20))
+        self.screen.blit(header, (self.SCREEN_WIDTH / 8, self.SCREEN_HEIGHT / 2 - 50))
+        self.screen.blit(instructions, (self.SCREEN_WIDTH / 8, self.SCREEN_HEIGHT / 2 - 20))
 
         pygame.display.flip()
 
@@ -269,9 +270,11 @@ class Game():
                 pos = pygame.joystick.Joystick(event.joy).get_axis(event.axis)
                 if self.ihandler.to_map().startswith("AXIS ") and pos != 0:
                     self.ihandler.key_down(axis)
+                    self.ihandler.key_up("AXIS KEYUP")
+                    continue
                 axis_pos = axis + "+"
                 axis_neg = axis + "-"
-                if pos == 0:
+                if abs(pos) <= self.AXIS_THRESHOLD:
                     self.ihandler.key_up(axis_neg)
                 elif pos > 0:
                     self.ihandler.key_down(axis_pos)
