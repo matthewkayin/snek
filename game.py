@@ -69,6 +69,13 @@ class Game():
         self.screen = pygame.display.set_mode((self.SCREEN_WIDTH, self.SCREEN_HEIGHT))
         self.clock = pygame.time.Clock()
 
+        # make image objects
+        self.image_ball = pygame.image.load("res/ball.png")
+
+        # make sound objects
+        pygame.mixer.music.load("res/storms.wav")
+        self.beep = pygame.mixer.Sound("res/beep.wav")
+
         pygame.font.init()
         self.smallfont = pygame.font.SysFont("Serif", 14)
         self.bigfont = pygame.font.SysFont("Serif", 22)
@@ -97,6 +104,7 @@ class Game():
         self.ongoing = True
         self.apple = [-1, -1]
         self.spawn_apple()
+        pygame.mixer.music.play(-1)  # the -1 makes it play forever
 
     def input(self):
         for event in pygame.event.get():
@@ -163,7 +171,7 @@ class Game():
     def update(self):
         # handle inputs from ihandler
         '''
-        event = ''
+        event = ""
         while event != "EMPTY":
             event = self.ihandler.key_queue()
             if event == "SNEK UP":
@@ -180,6 +188,11 @@ class Game():
                     self.spawn_apple()
                     self.ongoing = True
                     '''
+        event = ""
+        while event != "EMPTY":
+            event = self.ihandler.key_queue()
+            if event == "RESET GAME":
+                self.beep.play()
 
         if self.ongoing:
             self.snek.move_counter -= 1
@@ -204,7 +217,8 @@ class Game():
         pos = [0, 0]
         pos[0] = (self.SCREEN_WIDTH / 2) + 20 * self.ihandler.get_state("AXIS SNEK HORIZ")
         pos[1] = (self.SCREEN_HEIGHT / 2) + 20 * self.ihandler.get_state("AXIS SNEK VERT")
-        pygame.draw.rect(self.screen, self.RED, (pos[0], pos[1], 20, 20), False)
+        # pygame.draw.rect(self.screen, self.RED, (pos[0], pos[1], 20, 20), False)
+        self.screen.blit(self.image_ball, (pos[0], pos[1]))
 
         if self.show_fps:
             self.screen.blit(self.fps_text, (0, 0))
